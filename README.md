@@ -24,6 +24,7 @@ npm run build
 
 - All 51 requested FIFA 22 formation names, including named aliases/variations, with 11 distinct coordinate-based slots each.
 - Unbiased cryptographic rejection sampling for each available slot; sequential Spin All reveals each assignment individually.
+- Optional single-team mode: turn off **Enable second team** above the pitch to randomise only Team 1. The preference saves locally; Team 1 keeps its lineup and locks, Team 2 assignments/locks clear, and both teams’ names/formations stay saved.
 - Balanced, random team selection followed by a random available position. Spin All shuffles player order; locks preserve both team and position.
 - Editable team names saved locally and reflected in tabs, roster status, the matchup overview, results and PNG headers. Blank names fall back to Team A / Team B.
 - Team A / Team B pitch tabs with independent formations and a responsive, keyboard-accessible two-board overview.
@@ -49,3 +50,11 @@ Open **Name your teams** above the pitch to edit both names (24 characters each)
 The supplied EA controls guide returned HTTP 403, so the duty list is a configurable default and has not been independently verified against that page: https://www.ea.com/en-gb/playtesting/news/gameplay-controls-guide-set-pieces.
 
 Validation includes unit tests for taker eligibility, team scoping, empty/single-player teams, repeated duties, stale-assignment invalidation and team-name fallbacks. Browser checks cover saved team names, named tabs/overview, team-specific draws, role selection, reset confirmation/cancellation and mobile overflow.
+
+## Single-team mode
+
+Disable **Enable second team** above the pitch. Only Team 1’s tab, naming input, formation and set-piece duties remain visible; the two-team overview is hidden. Individual spins and Spin All draw solely from Team 1’s 11 positions (10 when GK is excluded). Locks still apply. The bottom reset confirmation adapts to one team. The team-mode preference survives refreshes alongside roster and team names.
+
+New players can be added up to the active capacity (11 or 22). Switching an existing larger roster to one team never deletes names: Spin All shuffles unlocked players and fills the available slots, leaving extras unassigned. Re-enable the second team to restore its saved name/formation and allow assignments across both sides again.
+
+Single-team validation covers every formation, capacity, GK exclusion, rerolls, mode transitions and preserved locks/names. Browser validation checks hidden second-team controls, set pieces, reset copy, saved mode, animated solo spins, switching back to two teams, keyboard tabs, busy-state protection and mobile layout.

@@ -26,14 +26,14 @@ export const teamIds = ['A', 'B'] as const;
 export type TeamId = typeof teamIds[number];
 export type TeamSlots = Record<TeamId, Slot[]>;
 
-export function availableTeamSlots(teams: TeamSlots, players: Player[], playerId: string, excludeGK: boolean) {
- return teamIds.map(team => ({ team, slots: availableSlots(teams[team], players.filter(p => p.teamId === team), playerId, excludeGK) }));
+export function availableTeamSlots(teams: TeamSlots, players: Player[], playerId: string, excludeGK: boolean, enabledTeams: readonly TeamId[] = teamIds) {
+ return enabledTeams.map(team => ({ team, slots: availableSlots(teams[team], players.filter(p => p.teamId === team), playerId, excludeGK) }));
 }
 
 // Select the less populated eligible team; break ties fairly, then draw a uniform slot.
 // Excluding the current player first releases both their old team and old position.
-export function planAssignment(teams: TeamSlots, players: Player[], playerId: string, excludeGK: boolean) {
- const eligible = availableTeamSlots(teams, players, playerId, excludeGK).filter(t => t.slots.length);
+export function planAssignment(teams: TeamSlots, players: Player[], playerId: string, excludeGK: boolean, enabledTeams: readonly TeamId[] = teamIds) {
+ const eligible = availableTeamSlots(teams, players, playerId, excludeGK, enabledTeams).filter(t => t.slots.length);
  if (!eligible.length) return undefined;
  const count = (team: TeamId) => players.filter(p => p.id !== playerId && p.teamId === team && p.slotId).length;
  const min = Math.min(...eligible.map(t => count(t.team)));
