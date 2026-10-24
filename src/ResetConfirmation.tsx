@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { RotateCcw } from 'lucide-react';
 
-export function ResetConfirmation({ onCancel, onConfirm }: { onCancel: () => void; onConfirm: () => void }) {
+export function ResetConfirmation({ onCancel, onConfirm, secondTeamEnabled = true }: { secondTeamEnabled?: boolean; onCancel: () => void; onConfirm: () => void }) {
  const ref = useRef<HTMLDialogElement>(null);
  const cancelRef = useRef<HTMLButtonElement>(null);
  useEffect(() => {
@@ -21,7 +21,7 @@ export function ResetConfirmation({ onCancel, onConfirm }: { onCancel: () => voi
  return <dialog ref={ref} className="reset-confirmation" aria-labelledby="reset-title" aria-describedby="reset-description" onCancel={onCancel}>
   <span className="reset-symbol"><RotateCcw size={23}/></span>
   <h2 id="reset-title">Are you sure?</h2>
-  <p id="reset-description">This will clear both teams’ positions and player locks. Your player names and chosen formations will stay saved.</p>
-  <div className="reset-actions"><button ref={cancelRef} className="secondary-button" onClick={onCancel}>Cancel</button><button className="primary-button" onClick={onConfirm}>Yes, reset both teams</button></div>
+  <p id="reset-description">This will clear {secondTeamEnabled?'both teams’':'your team’s'} positions and player locks. Your player names and chosen formations will stay saved.</p>
+  <div className="reset-actions"><button ref={cancelRef} className="secondary-button" onClick={onCancel}>Cancel</button><button className="primary-button" onClick={onConfirm}>Yes, reset {secondTeamEnabled?'both teams':'team'}</button></div>
  </dialog>;
 }

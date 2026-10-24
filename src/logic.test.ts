@@ -69,3 +69,49 @@ describe('Two-team assignment workflow', () => {
   expect(resetAssignments(players).every(p=>!p.teamId&&!p.slotId&&!p.locked)).toBe(true);
  });
 });
+
+describe('Single-team mode', () => {
+ const teams = { A: formations[31].slots, B: formations[47].slots };
+ it('draws only Team A for every formation and never spills into Team B', () => {
+  for (const formation of formations) {
+   const boards = { ...teams, A: formation.slots };
+   let players = team(22);
+   for (const player of shuffled(players)) {
+    const plan = planAssignment(boards, players, player.id, false, ['A']);
+    if (plan) players = players.map(p => p.id === player.id ? { ...p, teamId: plan.team, slotId: plan.slot.id } : p);
+   }
+   expect(players.filter(p => p.teamId === 'A')).toHaveLength(11);
+   expect(players.some(p => p.teamId === 'B')).toBe(false);
+   expect(new Set(players.filter(p => p.slotId).map(p => p.slotId)).size).toBe(11);
+   expect(planAssignment(boards, players, 'extra', false, ['A'])).toBeUndefined();
+  }
+ });
+ it('supports one player and rerolls their own released slot', () => {
+  const plan = planAssignment(teams, team(1), '0', false, ['A'])!;
+  expect(plan.team).toBe('A');
+  const full = teams.A.map((slot,i) => ({ id:String(i),name:String(i),teamId:'A' as const,slotId:slot.id,locked:false }));
+  expect(planAssignment(teams,full,'0',false,['A'])?.slot.id).toBe(full[0].slotId);
+ });
+ it('limits single-team GK-excluded draws to ten players', () => {
+  let players = team(11);
+  for (const player of players) {
+   const plan = planAssignment(teams,players,player.id,true,['A']);
+   if (plan) players = players.map(p => p.id === player.id ? { ...p,teamId:plan.team,slotId:plan.slot.id } : p);
+  }
+  expect(players.filter(p=>p.slotId)).toHaveLength(10);
+  expect(players.some(p=>p.slotId==='GK'||p.teamId==='B')).toBe(false);
+ });
+ it('clears Team B locks and positions without losing names or Team A locks', () => {
+  const players:Player[]=[{id:'a',name:'Paul',teamId:'A',slotId:'ST',locked:true},{id:'b',name:'Sam',teamId:'B',slotId:'ST',locked:true}];
+  const changed=resetTeamAssignments(players,'B');
+  expect(changed[0]).toEqual(players[0]);
+  expect(changed[1]).toEqual({id:'b',name:'Sam',locked:false,teamId:undefined,slotId:undefined});
+  expect(players[1].teamId).toBe('B');
+ });
+ it('can enable both teams again without changing Team A', () => {
+  const players=teams.A.map((slot,i)=>({id:String(i),name:String(i),teamId:'A' as const,slotId:slot.id,locked:true}));
+  expect(planAssignment(teams,players,'new',false,['A'])).toBeUndefined();
+  expect(planAssignment(teams,players,'new',false,['A','B'])?.team).toBe('B');
+ });
+ it('returns no assignment when no teams are enabled',()=>expect(planAssignment(teams,team(1),'0',false,[])).toBeUndefined());
+});
