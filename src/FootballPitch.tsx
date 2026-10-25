@@ -1,17 +1,21 @@
 import { forwardRef, useId } from 'react';
 import type { Formation } from './formations';
 import type { Player } from './logic';
+import { getPlayerSetPieces, setPieceRoles, type SetPieceAssignments } from './setPieces';
 
-type Props = { formation: Formation; players: Player[]; latest?: string; teamName?: string; accent?: string };
+type Props = { formation: Formation; players: Player[]; latest?: string; teamName?: string; accent?: string; setPieces?: SetPieceAssignments };
 // Project the same percentage-based tactical coordinates onto a stadium pitch.
 const project = (x: number, y: number) => ({ x: 300 + (x - 50) * (4.12 + y * .017), y: 20 + y * 4.58 });
 const point = (x: number, y: number) => { const p = project(x,y); return `${p.x},${p.y}`; };
 const area = (left: number, top: number, right: number, bottom: number) => `${point(left,top)} ${point(right,top)} ${point(right,bottom)} ${point(left,bottom)}`;
 const circle = (x: number, y: number, rx: number, ry: number) => Array.from({ length: 65 }, (_,i) => point(x + rx * Math.cos(i * Math.PI / 32), y + ry * Math.sin(i * Math.PI / 32))).join(' ');
 
-export const FootballPitch = forwardRef<SVGSVGElement, Props>(({ formation, players, latest, teamName='', accent='#c3f56c' }, ref) => {
+export const FootballPitch = forwardRef<SVGSVGElement, Props>(({ formation, players, latest, teamName='', accent='#c3f56c', setPieces={} }, ref) => {
  const uid=useId().replace(/:/g,'');
- return <svg ref={ref} className="pitch" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" role="img" aria-label={`${teamName} ${formation.name} formation with ${players.filter(p=>p.slotId).length} assigned players`}>
+ const assignedRoles=setPieceRoles.filter(role=>players.some(p=>p.slotId&&p.id===setPieces[role.id]));
+ const dutySummary=players.map(player=>{const roles=getPlayerSetPieces(setPieces,player);return roles.length?`${player.name}: ${roles.map(role=>role.label).join(', ')}`:'';}).filter(Boolean).join('; ');
+
+ return <svg ref={ref} className="pitch" viewBox={`0 0 600 ${assignedRoles.length?548:500}`} xmlns="http://www.w3.org/2000/svg" role="img" aria-label={`${teamName} ${formation.name} formation with ${players.filter(p=>p.slotId).length} assigned players${dutySummary?`. Set-piece takers: ${dutySummary}`:''}`}>
   <defs>
    <linearGradient id={`${uid}-night`} x2="0" y2="1"><stop stopColor="#111c23"/><stop offset="1" stopColor="#07100e"/></linearGradient>
    <radialGradient id={`${uid}-light`}><stop stopColor="#f4f7ff" stopOpacity=".85"/><stop offset=".15" stopColor="#b8d4f6" stopOpacity=".24"/><stop offset="1" stopColor="#9ec4ff" stopOpacity="0"/></radialGradient>
@@ -21,7 +25,7 @@ export const FootballPitch = forwardRef<SVGSVGElement, Props>(({ formation, play
    <filter id={`${uid}-texture`} x="0" y="0" width="100%" height="100%"><feTurbulence type="fractalNoise" baseFrequency=".65" numOctaves="3" seed="21" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter>
    <clipPath id={`${uid}-field`}><polygon points={area(0,0,100,100)}/></clipPath>
   </defs>
-  <rect width="600" height="500" rx="10" fill={`url(#${uid}-night)`}/>
+  <rect width="600" height={assignedRoles.length?548:500} rx="10" fill={`url(#${uid}-night)`}/>
   <path d="M0 55 85 97 55 340 0 393ZM600 55 515 97 545 340 600 393Z" fill={`url(#${uid}-crowd)`}/>
   <g stroke="#5e7b86" fill="none" opacity=".35" strokeWidth="2"><path d="M0 95 80 127M0 135 76 161M0 184 69 205M0 245 65 259M0 310 58 317M600 95 520 127M600 135 524 161M600 184 531 205M600 245 535 259M600 310 542 317"/></g>
   {[27,573].map(x=><g key={x}><ellipse cx={x} cy="52" rx="62" ry="90" fill={`url(#${uid}-light)`}/><rect x={x-7} y="33" width="14" height="33" rx="3" fill="#223543"/>{[0,1,2].flatMap(row=>[0,1].map(col=><circle key={`${row}-${col}`} cx={x-3+col*6} cy={39+row*9} r="2.4" fill="#f3f7ff"/>))}</g>)}
@@ -39,13 +43,18 @@ export const FootballPitch = forwardRef<SVGSVGElement, Props>(({ formation, play
   <g fill={`url(#${uid}-net)`} stroke="#c1d5ac" strokeWidth="1" opacity=".8"><polygon points={area(43,.2,57,3)}/><polygon points={area(43,97,57,102)}/></g>
   <g fontFamily="Arial, sans-serif" textAnchor="middle">{formation.slots.map(slot=>{
    const player=players.find(p=>p.slotId===slot.id), pos=project(slot.x,slot.y);
+   const duties=getPlayerSetPieces(setPieces,player);
+   const dutyCodes=duties.length>3?`${duties.slice(0,2).map(role=>role.shortLabel).join(' · ')} +${duties.length-2}`:duties.map(role=>role.shortLabel).join(' · ');
+   const badgeWidth=Math.max(24,dutyCodes.length*5.6+12);
    const neighbours=formation.slots.filter(s=>s.id!==slot.id&&Math.abs(s.y-slot.y)<12);
    const labelWidth=Math.min(88,...neighbours.map(s=>Math.abs(project(s.x,s.y).x-pos.x)-5)), maxChars=Math.floor(labelWidth/6.9);
    return <g key={slot.id} className={`pitch-marker ${latest===slot.id?'latest':''}`} style={{transform:`translate(${pos.x}px, ${pos.y}px)`}}>
     <circle r="21" fill={player?accent:'#f6f8f2'} stroke={player?accent:'#e2e7d9'} strokeWidth="1.5"/>
-    <text y="4" fill="#17281a" fontWeight="800" fontSize="13">{slot.label}</text>
+    <text y={duties.length?-3:4} fill="#17281a" fontWeight="800" fontSize="13">{slot.label}</text>
+    {duties.length>0&&<g className="set-piece-badge" role="img" tabIndex={0} aria-label={`${player!.name}: ${duties.map(role=>role.label).join(', ')}`} data-duties={duties.map(role=>role.id).join(' ')}><title>{`${player!.name}: ${duties.map(role=>role.label).join(', ')}`}</title><rect x={-badgeWidth/2} y="9" width={badgeWidth} height="14" rx="4" fill="#172a0d" stroke="#d0f58a" strokeWidth="1"/><text y="19" fontSize="9" fontWeight="700" fill="#dcffa2">{dutyCodes}</text></g>}
     {player?<g className="player-label"><title>{player.name}</title><rect x={-labelWidth/2} y="24" width={labelWidth} height="20" rx="4" fill="#10250e" fillOpacity=".9"/><text y="38" fill="#f3f9e9" fontSize="12.5" fontWeight="600">{player.name.length>maxChars?player.name.slice(0,maxChars-1)+'…':player.name}</text></g>:<text y="36" fill="#dae5ce" fontSize="9" letterSpacing="1">AVAILABLE</text>}
    </g>;
   })}</g>
+  {assignedRoles.length>0&&<g className="set-piece-legend" fontFamily="Arial, sans-serif"><path d="M18 502H582" stroke="#3b5133" strokeWidth="1"/>{assignedRoles.map((role,i)=><text key={role.id} x={20+(i%3)*193} y={520+Math.floor(i/3)*18} fontSize="10"><tspan fontWeight="700" fill="#d4f89a">{role.shortLabel}</tspan><tspan dx="6" fill="#c0d0b6">{role.label}</tspan></text>)}</g>}
  </svg>;
 });

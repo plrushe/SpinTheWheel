@@ -1,13 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState, type Dispatch, type SetStateAction } from 'react';
 import { Flag, Shuffle } from 'lucide-react';
 import type { Player, TeamId } from './logic';
-import { drawSetPieces, reconcileSetPieces, setPieceRoles, type SetPieceAssignments, type SetPieceRole } from './setPieces';
-export function SetPiecesPanel({ players, team, teamName, busy }: { players: Player[]; team: TeamId; teamName: string; busy: boolean }) {
+import { drawSetPieces, setPieceRoles, type TeamSetPieceAssignments, type SetPieceRole } from './setPieces';
+export function SetPiecesPanel({ players, team, teamName, busy, results, setResults }: { players: Player[]; team: TeamId; teamName: string; busy: boolean; results: TeamSetPieceAssignments; setResults: Dispatch<SetStateAction<TeamSetPieceAssignments>> }) {
  const [enabled, setEnabled] = useState<SetPieceRole[]>(setPieceRoles.filter(r => r.enabled).map(r => r.id));
- const [results, setResults] = useState<Record<TeamId, SetPieceAssignments>>({ A: {}, B: {} });
- useEffect(() => {
-  setResults(previous => ({ A: reconcileSetPieces(previous.A, players, 'A'), B: reconcileSetPieces(previous.B, players, 'B') }));
- }, [players]);
  const eligible = players.filter(p => p.teamId === team && p.slotId);
  const roles = setPieceRoles.filter(r => enabled.includes(r.id));
  return <section className="set-pieces-panel" aria-labelledby="set-pieces-title">

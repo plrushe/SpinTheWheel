@@ -64,3 +64,9 @@ The header contains the team-draw selector in place of the previous tagline, hel
 ## Visual design
 
 Football Roulette uses a dark stadium workspace, charcoal panels, lime controls, a colourful roulette wheel, and a textured SVG pitch drawn in perspective. The formation heading shows only the current formation name; no extra defensive-count badge or top navigation buttons are included. The layout keeps the roster, pitch and draw controls in three columns on desktop, two columns on tablets, and a single column on mobile. Editable tabs, tooltips, confirmation dialogs, team draw settings, and set-piece controls share the same visual treatment. The design uses system fonts and locally drawn graphics; no external assets or font service is required.
+
+## Set-piece indicators on the pitch
+
+Assigned takers show a lime-outlined badge on their position marker. Codes are FK (free kicks), P (penalties), LC/RC (left/right corners), TI (throw-ins), and GK (goal kicks). Up to three duties appear directly; larger lists show two codes and a remaining-duty count. Hover the badge for the full player/duty list, also included in accessible pitch descriptions. A key appears below the pitch. The active pitch, two-team overview and PNG export use the same assignment data and indicator drawing.
+
+Badges update when duties are drawn or disabled. Renaming players preserves their duties; removing players, clearing their formation, moving them to the other team, disabling Team 2 or resetting clears invalid indicators. PNG dimensions adapt to include the key without stretching the pitch. Validation includes duty-to-player mapping tests and browser checks for team scoping, multiple duties, disabled roles, overview, export contents, renames, formation changes, removal, reset and mobile layout.
