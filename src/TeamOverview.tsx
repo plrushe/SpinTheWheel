@@ -4,7 +4,7 @@ import type { Formation } from './formations';
 import { teamIds, type Player, type TeamId } from './logic';
 import { displayTeamName, type TeamNames } from './teamNames';
 import { FootballPitch } from './FootballPitch';
-export const teamAccent = { A: '#c6f66b', B: '#8acbf5' };
+export const teamAccent = { A: '#b7dfae', B: '#b4d9eb' };
 export function TeamOverview({ formations, players, teamNames, onClose }: { formations: Record<TeamId, Formation>; players: Player[]; teamNames: TeamNames; onClose: () => void }) {
  const ref = useRef<HTMLDialogElement>(null);
  useEffect(() => {

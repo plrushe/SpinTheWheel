@@ -1,4 +1,4 @@
-# FIFA Position Roulette
+# Football Position Roulette
 
 A responsive, client-only match-night utility built with React, TypeScript, Tailwind CSS and Vite. Add 1–22 players, spin a physical position wheel, and see both teams on responsive SVG football pitches.
 
@@ -22,7 +22,7 @@ npm run build
 
 ## Features
 
-- All 51 requested FIFA 22 formation names, including named aliases/variations, with 11 distinct coordinate-based slots each.
+- All 51 requested football formation names, including named aliases/variations, with 11 distinct coordinate-based slots each.
 - Unbiased cryptographic rejection sampling for each available slot; sequential Spin All reveals each assignment individually.
 - Optional single-team mode: turn off **Enable second team** in the top-right header to randomise only Team 1. The preference saves locally; Team 1 keeps its lineup and locks, Team 2 assignments/locks clear, and both teams’ names/formations stay saved.
 - Balanced, random team selection followed by a random available position. Spin All shuffles player order; locks preserve both team and position.
@@ -60,3 +60,7 @@ New players can be added up to the active capacity (11 or 22). Switching an exis
 Single-team validation covers every formation, capacity, GK exclusion, rerolls, mode transitions and preserved locks/names. Browser validation checks hidden second-team controls, set pieces, reset copy, saved mode, animated solo spins, switching back to two teams, keyboard tabs, busy-state protection and mobile layout.
 
 The header contains the team-draw selector in place of the previous tagline, help button and formation link. On mobile it wraps below the brand. Browser checks cover inline editing via pencil, double-click and F2; Enter/blur save, Escape cancellation, focus restoration, blank-name fallback, saved names, keyboard tab navigation, disabled controls while spinning, single-team mode and mobile overflow.
+
+## Visual design
+
+Football Roulette uses a light neutral workspace, white cards, forest-green controls, a darker SVG pitch, and a muted wheel palette. The layout keeps the roster, pitch and draw controls in three columns on desktop, two columns on tablets, and a single column on mobile. Editable tabs, tooltips, confirmation dialogs, team draw settings, and set-piece controls share the same visual treatment. The design uses system fonts and locally drawn graphics; no external assets or font service is required.
