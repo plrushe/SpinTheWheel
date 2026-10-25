@@ -364,7 +364,7 @@ footer { color: #9eaf90; }
 .next-player{display:flex;align-items:center;justify-content:center;gap:7px;min-height:28px;margin-bottom:14px;color:#d5e6c3;font-size:11px;line-height:1.6;text-align:center}
 /* Keep the squad controls visible while the roster scrolls inside the card. */
 .roster-panel{position:sticky;top:20px;display:flex;flex-direction:column;min-height:0;max-height:max(0px,calc(100dvh - var(--roster-top,104px) - 16px));overflow:hidden}
-.roster-panel>.player-list{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;scrollbar-gutter:stable;overscroll-behavior-y:auto;padding-right:4px}
+.roster-panel>.player-list{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;scrollbar-gutter:stable;overscroll-behavior-y:auto;padding-right:16px}
 .roster-panel>.panel-heading,.roster-panel>.panel-description,.roster-panel>.add-player,.roster-panel>.single-team-capacity,.roster-panel>.roster-label,.roster-panel>.roster-bottom{flex-shrink:0}
 @media(max-width:640px){.roster-panel{position:relative;top:auto}}
 .roster-panel[data-compact=true]{padding:16px}
