@@ -144,10 +144,6 @@ h2 { margin: 0; font-size: 16px; font-weight: 650; letter-spacing: -.4px; }
 .wheel-hub small { font-size: 5px; letter-spacing: 1.2px; color: var(--muted); }
 .wheel-dot { position: absolute; width: 3px; height: 3px; top: 49%; border-radius: 50%; background: #19231e; }
 .wheel-dot.d1 { left: 0; }.wheel-dot.d2 { right: 0; }
-.result-box { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; min-height: 35px; margin-bottom: 14px; color: var(--muted); font-size: 10px; line-height: 1.6; }
-.result-box.has-result { padding: 9px; border-radius: 7px; background: #19231e; color: #aab9ad; }
-.result-box strong { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #eff4ed; }
-.result-box b { color: #aab9ad; font-size: 10px; overflow-wrap: anywhere; }
 .spin-button { position: relative; height: 46px; margin-bottom: 9px; }
 .spin-button>svg:last-child { position: absolute; right: 13px; }
 .button-hint { margin-left: 4px; color: #aab9ad; font-size: 7px; font-weight: 450; letter-spacing: .6px; }
@@ -330,9 +326,6 @@ h2 { font-size: 17px; }
 .wheel-hub span { color: #f3f6ec; font-size: 28px; font-weight: 850; font-style: italic; letter-spacing: -1px; }
 .wheel-hub small { color: #b9c6a9; font-size: 6px; letter-spacing: 1.6px; }
 .wheel-dot { background: #b7e468; }
-.result-box { color: #d5e6c3; }
-.result-box.has-result { background: #293c1f; color: #dceacb; }
-.result-box strong, .result-box b { color: #d1f795; }
 .select-wrap select { background: #101c13; color: #eff4e7; border-color: #405434; }
 .formation-random select { background: #202d1b; }
 .formation-random>button { background: #14200f; color: #eff5e6; border-color: #476335; }
@@ -368,3 +361,18 @@ footer { color: #9eaf90; }
 @media(max-width:640px) { .app-shell{padding:0 14px}.site-header{padding:22px 2px;gap:20px}.brand{font-size:21px}.brand-symbol{width:44px;height:44px}.brand-symbol img{width:43px;height:43px}.brand small{font-size:7px;letter-spacing:1.6px}.workspace-grid{display:flex;gap:18px}.panel{padding:20px}.pitch-section{padding:12px}.pitch-topbar{gap:12px}.pitch-topbar>div:first-child{min-width:180px}.pitch-topbar h2{font-size:22px}.board-navigation{justify-content:flex-start;flex:1}.formation-lock-control{margin-left:auto}.pitch-footer{font-size:8px;gap:8px}.pitch-footer button{padding:7px;font-size:8px}.set-pieces-panel{padding:14px}.set-pieces-heading h2{font-size:13px}.set-pieces-heading button{padding:0 7px;font-size:8px}.set-piece-results{grid-template-columns:1fr 1fr}.wheel-wrap{max-width:310px}.quick-settings button{font-size:10px;padding:9px 8px}.player-list{min-height:140px;max-height:350px}.team-overview{padding:20px 14px} }
 @media(max-width:360px) { .panel{padding:16px}.brand{font-size:19px}.brand small{font-size:6px}.pitch-footer button{max-width:52%}.set-pieces-heading{gap:7px}.set-pieces-heading h2{font-size:12px}.quick-settings button{font-size:9px;padding:9px 5px} }
 .set-piece-badge{cursor:help;outline:none}.set-piece-badge:hover rect,.set-piece-badge:focus-visible rect{fill:#365019;stroke:#f0ffd9;stroke-width:1.5}.set-piece-badge:focus-visible{filter:drop-shadow(0 0 3px #c4f66a)}
+.next-player{display:flex;align-items:center;justify-content:center;gap:7px;min-height:28px;margin-bottom:14px;color:#d5e6c3;font-size:11px;line-height:1.6;text-align:center}
+/* Keep the squad controls visible while the roster scrolls inside the card. */
+.roster-panel{position:sticky;top:20px;display:flex;flex-direction:column;min-height:0;max-height:max(0px,calc(100dvh - var(--roster-top,104px) - 16px));overflow:hidden}
+.roster-panel>.player-list{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto;scrollbar-gutter:stable;overscroll-behavior-y:contain;padding-right:4px}
+.roster-panel>.panel-heading,.roster-panel>.panel-description,.roster-panel>.add-player,.roster-panel>.single-team-capacity,.roster-panel>.roster-label,.roster-panel>.roster-bottom{flex-shrink:0}
+@media(max-width:640px){.roster-panel{position:relative;top:auto}}
+.roster-panel[data-compact=true]{padding:16px}
+.roster-panel[data-compact=true]>.panel-description{display:none}
+.roster-panel[data-compact=true]>.add-player{margin-top:12px}
+.roster-panel[data-compact=true]>.roster-label{margin:14px 0 6px}
+.roster-panel[data-compact=true]>.roster-bottom{margin-top:8px;padding-top:12px}
+.roster-panel[data-compact=true] .progress-track{margin:8px 0 12px}
+.roster-panel[data-compact=true] .privacy-note{margin-top:10px;font-size:8px}
+.roster-panel[data-cramped=true]{overflow-y:auto}
+.roster-panel[data-cramped=true]>.player-list{flex:0 0 auto;min-height:80px;max-height:180px}
