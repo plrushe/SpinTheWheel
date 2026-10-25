@@ -400,3 +400,5 @@ footer { color: #9eaf90; }
 .pitch-section[data-cramped=true] #team-board>.pitch{flex:none;min-height:220px}
 @media(max-width:960px){.roulette-panel{position:relative;top:auto}}
 @media(max-width:640px){.pitch-section{position:relative;top:auto}.set-pieces-panel{padding:11px}.set-pieces-heading h2{font-size:13px}.set-pieces-heading button{font-size:9px}}
+/* Use one explicit height so content changes cannot misalign the panels. */
+.workspace-grid>.roster-panel,.workspace-grid>.pitch-section,.workspace-grid>.roulette-panel{height:max(0px,var(--panel-available,calc(100dvh - 120px)))}
