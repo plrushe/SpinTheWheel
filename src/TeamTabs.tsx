@@ -46,6 +46,6 @@ export function TeamTabs({ teams, activeTeam, names, players, busy, onSelect, on
   <button className="team-tab-rename" aria-label={`Rename Team ${team}`} title={`Rename ${displayTeamName(names, team)}`} disabled={busy} onClick={() => startEditing(team)}><Pencil size={11}/></button>
   {editing === team && <input ref={inputRef} className="team-tab-input" aria-label={`Team ${team} name`} maxLength={24} value={draft} disabled={busy} onChange={e => setDraft(e.target.value)} onBlur={() => finishEditing(true, false)} onKeyDown={e => {
    if (e.key === 'Enter' || e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); finishEditing(e.key === 'Enter', true); }
-  }}/ >}
+  }}/>}
  </div>)}</div>;
 }

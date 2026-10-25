@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { drawSetPieces, reconcileSetPieces, setPieceRoles } from './setPieces';
+import { drawSetPieces, reconcileSetPieces, setPieceRoles, getPlayerSetPieces } from './setPieces';
 import { displayTeamName } from './teamNames';
 import type { Player } from './logic';
 const players: Player[] = [
@@ -36,5 +36,26 @@ describe('Team names', () => {
  it('uses trimmed custom names and falls back for blank names', () => {
   expect(displayTeamName({A:'  Lions  ',B:'   '},'A')).toBe('Lions');
   expect(displayTeamName({A:'Lions',B:'   '},'B')).toBe('Team B');
+ });
+});
+
+describe('Pitch set-piece indicators', () => {
+ it('lists every duty for the assigned player in a stable order', () => {
+  const result=drawSetPieces(players,'A',setPieceRoles.map(role=>role.id));
+  expect(getPlayerSetPieces(result,players[0]).map(role=>role.id)).toEqual(setPieceRoles.map(role=>role.id));
+  expect(new Set(getPlayerSetPieces(result,players[0]).map(role=>role.shortLabel)).size).toBe(6);
+ });
+ it('never labels unassigned players or empty positions', () => {
+  expect(getPlayerSetPieces({'penalties':'c'},players[2])).toEqual([]);
+  expect(getPlayerSetPieces({'penalties':'a'},undefined)).toEqual([]);
+ });
+ it('shows only duties belonging to that player', () => {
+  expect(getPlayerSetPieces({'free-kicks':'a','penalties':'b'},players[0]).map(role=>role.label)).toEqual(['Free kicks']);
+ });
+ it('drops a badge when the duty is removed', () => {
+  const assignments={'free-kicks':'a','penalties':'a'};
+  expect(getPlayerSetPieces(assignments,players[0])).toHaveLength(2);
+  const {penalties:removed,...remaining}=assignments;
+  expect(getPlayerSetPieces(remaining,players[0]).map(role=>role.shortLabel)).toEqual(['FK']);
  });
 });
