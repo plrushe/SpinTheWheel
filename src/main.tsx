@@ -15,11 +15,14 @@ import { reconcileSetPieces, type TeamSetPieceAssignments } from './setPieces';
 import { PrivacyControls } from './PrivacyControls';
 import { readConsent, readPreference, writePreference } from './privacyStorage';
 import './styles.css';
+import { MobileLayout } from './MobileLayout';
 const STORAGE='fc-roulette-roster-v1';
 const TEAM_MODE_STORAGE='fc-roulette-second-team-enabled-v1';
 function loadTeamMode(){try{return readPreference(TEAM_MODE_STORAGE)!=='false';}catch{return true;}}
 function loadRoster():Player[]{try{const raw=JSON.parse(readPreference(STORAGE)||'[]');return Array.isArray(raw)?raw.filter(p=>typeof p.id==='string'&&typeof p.name==='string').slice(0,22).map(p=>({id:p.id,name:p.name.slice(0,24),locked:false})):[];}catch{return[];}}
 function App(){
+ const [isMobile,setIsMobile]=useState(()=>matchMedia('(max-width: 767px)').matches);
+ useEffect(()=>{const media=matchMedia('(max-width: 767px)');const update=()=>setIsMobile(media.matches);media.addEventListener('change',update);return()=>media.removeEventListener('change',update);},[]);
  const [storageConsent,setStorageConsent]=useState(readConsent);
  const remember=storageConsent?.preferences===true;
  const [privacySettingsRequest,setPrivacySettingsRequest]=useState(0);
@@ -61,7 +64,7 @@ function App(){
   if(headerRef.current)observer.observe(headerRef.current);
   window.addEventListener('resize',updateSquadOffset);
   return()=>{observer.disconnect();window.removeEventListener('resize',updateSquadOffset);};
- },[]);
+ },[isMobile]);
  const pitchRef=useRef<SVGSVGElement>(null),audioRef=useRef<AudioContext|null>(null),mounted=useRef(true);
  useEffect(()=>()=>{mounted.current=false;},[]);
  useEffect(()=>{if(remember&&!writePreference(STORAGE,JSON.stringify(players.map(({id,name})=>({id,name})))))setNotice('Browser storage is unavailable. Export your lineup to keep a copy.');},[players,remember]);
@@ -93,17 +96,29 @@ function App(){
  // Align the centre of the selected wedge to the fixed pointer at twelve o’clock.
  const target=(360-(index+.5)*360/available.length)%360;
  currentRotation+=360*5+((target-currentRotation%360+360)%360);setRotation(currentRotation);
- const ticks=instant?null:setInterval(()=>tone(240+Math.random()*160,.035),130);
- await sleep(instant?20:3450);if(ticks)clearInterval(ticks);if(!mounted.current)return;
+ const fastSpin=instant||(isMobile&&matchMedia('(prefers-reduced-motion: reduce)').matches);
+ const ticks=fastSpin?null:setInterval(()=>tone(240+Math.random()*160,.035),130);
+ await sleep(fastSpin?20:3450);if(ticks)clearInterval(ticks);if(!mounted.current)return;
  working=working.map(q=>q.id===p.id?{...q,slotId:slot.id,teamId:team}:q);setPlayers(working);setResult({name:p.name,position:slot.label,team});tone(660,.2);
- if(all)await sleep(instant?60:850);
+ if(all)await sleep(fastSpin?60:850);
  }
  setSelected(working.find(p=>!p.slotId&&!p.locked)?.id||queue.at(-1)?.id||'');setWheelSlots(null);setRotation(0);setBusy(false);
  }
- async function randomFormation(){if(busy||formationLock)return;const choices=formations.filter(f=>enabled.includes(f.id)&&(group==='all'||f.backs===Number(group)));if(!choices.length){setNotice('Enable at least one formation in this group.');return;}setBusy(true);if(!instant)for(let i=0;i<16;i++){setFormationDisplay(choices[randomIndex(choices.length)].name);tone(300+i*15,.035);await sleep(45+i*7);}changeFormation(choices[randomIndex(choices.length)].id);setFormationDisplay('');setBusy(false);}
+ async function randomFormation(){if(busy||formationLock)return;const choices=formations.filter(f=>enabled.includes(f.id)&&(group==='all'||f.backs===Number(group)));if(!choices.length){setNotice('Enable at least one formation in this group.');return;}setBusy(true);if(!instant&&!(isMobile&&matchMedia('(prefers-reduced-motion: reduce)').matches))for(let i=0;i<16;i++){setFormationDisplay(choices[randomIndex(choices.length)].name);tone(300+i*15,.035);await sleep(45+i*7);}changeFormation(choices[randomIndex(choices.length)].id);setFormationDisplay('');setBusy(false);}
  function saveRoster(){if(!remember){setPrivacySettingsRequest(n=>n+1);return;}if(writePreference(STORAGE,JSON.stringify(players.map(({id,name})=>({id,name}))))){setSaved(true);setTimeout(()=>setSaved(false),2000);}else setNotice('Could not save: browser storage is unavailable.');}
  async function exportImage(){try{const svg=pitchRef.current;if(!svg)return;const clone=svg.cloneNode(true) as SVGSVGElement;clone.querySelectorAll('.pitch-marker').forEach(node=>{const el=node as SVGElement;el.setAttribute('transform',el.style.transform.replace(/translate\(([^p]+)px, ([^p]+)px\)/,'translate($1 $2)'));el.removeAttribute('style');});const markup=new XMLSerializer().serializeToString(clone);const image=new Image();const url=URL.createObjectURL(new Blob([markup],{type:'image/svg+xml;charset=utf-8'}));try{await new Promise<void>((resolve,reject)=>{image.onload=()=>resolve();image.onerror=reject;image.src=url;});const canvas=document.createElement('canvas');const pitchHeight=Math.round(1200*svg.viewBox.baseVal.height/svg.viewBox.baseVal.width);canvas.width=1200;canvas.height=pitchHeight+140;const ctx=canvas.getContext('2d')!;ctx.fillStyle='#101916';ctx.fillRect(0,0,1200,canvas.height);ctx.drawImage(image,0,80,1200,pitchHeight);ctx.fillStyle='#c0f468';ctx.font='bold 24px Arial';ctx.fillText(`FOOTBALL ROULETTE  /  ${teamName(activeTeam)}  /  ${formation.name}`,44,50,1112);ctx.fillStyle='#a4b7ab';ctx.font='16px Arial';ctx.fillText('YOUR SQUAD. FATE’S FORMATION.',44,pitchHeight+113);const link=document.createElement('a');link.download=`football-lineup-team-${activeTeam}-${formation.name}.png`;link.href=canvas.toDataURL('image/png');link.click();setNotice('Lineup exported as a PNG.');}finally{URL.revokeObjectURL(url);}}catch{setNotice('Image export failed. Please try again.');}}
- return <div className="app-shell">
+ return <div className={isMobile?'mobile-shell':'app-shell'}>
+ {isMobile?<MobileLayout players={players} active={active} capacity={capacity} assigned={assigned} busy={busy} disabled={disabled}
+ names={teamNames} teamName={teamName} teams={activeTeams} team={activeTeam} formation={formation} formationDisplay={formationDisplay} formationLocked={formationLock}
+ secondTeamEnabled={secondTeamEnabled} instant={instant} sound={sound} excludeGK={excludeGK} group={group} enabled={enabled} wheelSlots={wheelSlots||pool} rotation={rotation} result={result}
+ setPieces={setPieceResults} pitchRef={pitchRef} saved={saved} remember={remember} notice={notice}
+ privacyControls={<PrivacyControls settingsRequest={privacySettingsRequest} onConsentChange={setStorageConsent}/>}
+ onPlayers={setPlayers} onSelectPlayer={setSelected} onTeam={setActiveTeam} onRename={(team,name)=>setTeamNames(previous=>({...previous,[team]:name}))}
+ onFormation={changeFormation} onRandomFormation={randomFormation} onFormationLock={()=>setFormationLocks({...formationLocks,[activeTeam]:!formationLock})}
+ onGroup={setGroup} onEnabled={setEnabled} onTeamMode={toggleSecondTeam} onSound={()=>setSound(!sound)} onInstant={()=>setInstant(!instant)}
+ onExcludeGK={enabled=>{setExcludeGK(enabled);setNotice(enabled?'Goalkeeper excluded from future spins. Existing assignments stay in place.':'Goalkeeper included in the spin pool.');}}
+ onSpin={spin} onSave={saveRoster} onExport={exportImage} onOverview={()=>setOverview(true)} onReset={()=>setConfirmReset(true)} onSetPieces={setSetPieceResults} onDismiss={()=>setNotice('')}/>:<>
+
  <header ref={headerRef} className="site-header"><a href="#" className="brand"><span className="brand-symbol"><img src="/favicon.svg" width="43" height="43" alt=""/></span><span>FOOTBALL<span className="brand-light">ROULETTE</span><small>FOOTBALL POSITION RANDOMISER</small></span></a><div className="team-mode-control"><div><strong>{secondTeamEnabled?'Two-team draw':'Single-team draw'}</strong><span>{secondTeamEnabled?'Random teams and positions':'Positions for Team 1 only'}</span></div><label>Enable second team<input type="checkbox" role="switch" checked={secondTeamEnabled} disabled={busy} onChange={e=>toggleSecondTeam(e.target.checked)}/></label></div></header>
  <main>
  <div className="workspace-grid">
@@ -117,7 +132,7 @@ function App(){
  </div>
  {notice&&<div className="notice" role="status">{notice}<button aria-label="Dismiss message" onClick={()=>setNotice('')}><X size={15}/></button></div>}
  <div className="bottom-bar"><span><Shield size={15}/><strong>Fair play, by design.</strong> {secondTeamEnabled?'Balanced teams. Random positions. No favourites.':'Random positions. One team. No favourites.'}</span><button disabled={busy||!assigned} onClick={()=>setConfirmReset(true)}><RotateCcw size={14}/> {secondTeamEnabled?'Reset both teams':'Reset team'}</button></div>
- <footer className="site-footer"><span>Football Roulette · Made for match day.</span><nav aria-label="Footer"><a href="mailto:plrushe@outlook.com">plrushe@outlook.com</a><a href="/privacy.html">Privacy & cookies</a><PrivacyControls settingsRequest={privacySettingsRequest} onConsentChange={setStorageConsent}/></nav></footer></main>
+ <footer className="site-footer"><span>Football Roulette · Made for match day.</span><nav aria-label="Footer"><a href="mailto:plrushe@outlook.com">plrushe@outlook.com</a><a href="/privacy.html">Privacy & cookies</a><PrivacyControls settingsRequest={privacySettingsRequest} onConsentChange={setStorageConsent}/></nav></footer></main></>}
  {confirmReset&&<ResetConfirmation secondTeamEnabled={secondTeamEnabled} onCancel={()=>setConfirmReset(false)} onConfirm={()=>{setPlayers(resetAssignments(players));setResult(null);setWheelSlots(null);setRotation(0);setNotice(`${secondTeamEnabled?'Both teams':'Team 1'} reset. Your roster is still here.`);setConfirmReset(false);}}/>}
  {overview&&secondTeamEnabled&&<TeamOverview setPieces={setPieceResults} formations={teamFormations} players={players} teamNames={teamNames} onClose={()=>setOverview(false)}/>}
 
