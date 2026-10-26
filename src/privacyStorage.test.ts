@@ -1,0 +1,14 @@
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { CONSENT_KEY, GAME_STORAGE_KEYS, parseConsent, readPreference, saveConsent, writePreference, clearSavedGameData } from './privacyStorage';
+let memory:Map<string,string>;
+beforeEach(()=>{memory=new Map();vi.stubGlobal('localStorage',{getItem:vi.fn((key:string)=>memory.get(key)??null),setItem:vi.fn((key:string,value:string)=>memory.set(key,value)),removeItem:vi.fn((key:string)=>memory.delete(key))});});
+afterEach(()=>vi.unstubAllGlobals());
+describe('Privacy and optional browser storage',()=>{
+ it('blocks preference reads and writes before a choice',()=>{memory.set(GAME_STORAGE_KEYS[0],'saved names');expect(readPreference(GAME_STORAGE_KEYS[0])).toBeNull();expect(writePreference(GAME_STORAGE_KEYS[1],'names')).toBe(false);expect(memory.has(GAME_STORAGE_KEYS[1])).toBe(false);});
+ it('allows optional preferences only after acceptance',()=>{saveConsent(true);expect(writePreference(GAME_STORAGE_KEYS[0],'names')).toBe(true);expect(readPreference(GAME_STORAGE_KEYS[0])).toBe('names');});
+ it('rejects without blocking the service and deletes only app game keys',()=>{saveConsent(true);for(const key of GAME_STORAGE_KEYS)memory.set(key,'data');memory.set('unrelated','keep');saveConsent(false);expect(GAME_STORAGE_KEYS.every(key=>!memory.has(key))).toBe(true);expect(memory.get('unrelated')).toBe('keep');expect(JSON.parse(memory.get(CONSENT_KEY)!).preferences).toBe(false);expect(writePreference(GAME_STORAGE_KEYS[0],'names')).toBe(false);});
+ it('rejects malformed, future, expired and obsolete consent',()=>{const now=Date.now();for(const raw of ['invalid','null','{}',JSON.stringify({version:1,preferences:true,savedAt:now+1}),JSON.stringify({version:1,preferences:true,savedAt:now-180*86400000}),JSON.stringify({version:2,preferences:true,savedAt:now})])expect(parseConsent(raw,now)).toBeNull();});
+ it('does not read saved preferences after consent expires',()=>{memory.set(CONSENT_KEY,JSON.stringify({version:1,preferences:true,savedAt:Date.now()-181*86400000}));memory.set(GAME_STORAGE_KEYS[0],'data');expect(readPreference(GAME_STORAGE_KEYS[0])).toBeNull();});
+ it('clears saved game data without removing the consent decision',()=>{saveConsent(true);for(const key of GAME_STORAGE_KEYS)memory.set(key,'data');expect(clearSavedGameData()).toBe(true);expect(memory.has(CONSENT_KEY)).toBe(true);expect(GAME_STORAGE_KEYS.every(key=>!memory.has(key))).toBe(true);});
+ it('fails closed when browser storage is unavailable',()=>{vi.stubGlobal('localStorage',{getItem:()=>{throw Error('blocked');},setItem:()=>{throw Error('blocked');},removeItem:()=>{throw Error('blocked');}});expect(readPreference('key')).toBeNull();expect(writePreference('key','value')).toBe(false);expect(saveConsent(true).persisted).toBe(false);expect(clearSavedGameData()).toBe(false);});
+});
